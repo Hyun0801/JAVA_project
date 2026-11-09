@@ -7,8 +7,8 @@ import analysis.DateAnalyzer;
 import scheduler.SubscriptionScheduler; // 스케줄러 클래스 추가
 import scheduler.SubscriptionDto;     // 데이터 전송 객체 추가
 
-import java.time.LocalDate;
-import java.util.ArrayList;
+import java.time.LocalDate;    // 문자를 날짜로 변환
+import java.util.ArrayList;    // 새로운 데이터 바구니 생성
 import java.util.List;
 
 //프로그램의 전체 흐름을 제어하고 각 패키지들을 연결해 실행하는 메인 클래스
@@ -94,7 +94,7 @@ public class MainClass {
             
             // 2. 두 번째 파라미터 (스케줄러가 알림 대상을 찾았을 때 실행할 행동)
             (dto) -> {
-                System.out.println("\n📣 [챗봇 전송 대기] 디스코드 봇을 통해 '" + dto.getServiceName() + "' 만료 알림을 전송해야 합니다!");
+                System.out.println("\n[챗봇 전송 대기] 디스코드 봇을 통해 '" + dto.getServiceName() + "' 만료 알림을 전송해야 합니다!");
                 // (나중에 디스코드 봇 챗봇 클래스가 통합되면, 이 자리에 봇 전송 코드를 넣습니다.)
             }
         );
