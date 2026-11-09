@@ -1,8 +1,0 @@
-/**
- * 
- */
-/**
- * 
- */
-module JavaP_final {
-}
