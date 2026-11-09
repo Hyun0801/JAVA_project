@@ -4,7 +4,11 @@ import scraper.SubscriptionScraper;
 import database.SubscriptionDAO;
 import database.SQLiteManager;
 import analysis.DateAnalyzer;
+import scheduler.SubscriptionScheduler; // 스케줄러 클래스 추가
+import scheduler.SubscriptionDto;     // 데이터 전송 객체 추가
 
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 //프로그램의 전체 흐름을 제어하고 각 패키지들을 연결해 실행하는 메인 클래스
@@ -69,5 +73,30 @@ public class MainClass {
         // ExpenseCalculator(또는 DAO)를 통해 계산된 총액은 추후 Swing 대시보드 하단이나 챗봇 요약 메시지로 전달될 예정
         int totalExpenditure = SubscriptionDAO.calculateMonthlyTotal();
         System.out.println("이번 달 구독 지출 총액: " + totalExpenditure + "원");
+
+        // 6. 스케줄러
+        SubscriptionScheduler scheduler = new SubscriptionScheduler();
+        // 스케줄러의 startScheduler 메서드 실행
+        scheduler.startScheduler(
+            // 1. 첫 번째 파라미터 (DB 데이터를 가져와 DTO로 변환하여 스케줄러에 전달)
+            () -> {
+                List<String[]> rawData = SubscriptionDAO.getAllSubscriptions();
+                List<SubscriptionDto> dtoList = new ArrayList<>();
+                
+                for (String[] sub : rawData) {
+                    String serviceName = sub[0];
+                    // DB에 문자열로 저장된 "2026-11-30"을 LocalDate 객체로 변환
+                    LocalDate expiryDate = LocalDate.parse(sub[1]); 
+                    dtoList.add(new SubscriptionDto(serviceName, expiryDate));
+                }
+                return dtoList;
+            },
+            
+            // 2. 두 번째 파라미터 (스케줄러가 알림 대상을 찾았을 때 실행할 행동)
+            (dto) -> {
+                System.out.println("\n📣 [챗봇 전송 대기] 디스코드 봇을 통해 '" + dto.getServiceName() + "' 만료 알림을 전송해야 합니다!");
+                // (나중에 디스코드 봇 챗봇 클래스가 통합되면, 이 자리에 봇 전송 코드를 넣습니다.)
+            }
+        );
     }
 }
