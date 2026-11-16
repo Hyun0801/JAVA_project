@@ -4,19 +4,16 @@ import scraper.SubscriptionScraper;
 import database.SubscriptionDAO;
 import database.SQLiteManager;
 import analysis.DateAnalyzer;
-import scheduler.SubscriptionScheduler; // 스케줄러 클래스 추가
-import scheduler.SubscriptionDto;     // 데이터 전송 객체 추가
+import scheduler.SubscriptionScheduler; 
+import scheduler.SubscriptionDto; 
 
-import java.time.LocalDate;    // 문자를 날짜로 변환
-import java.util.ArrayList;    // 새로운 데이터 바구니 생성
+import java.time.LocalDate;   
+import java.util.ArrayList;   
 import java.util.List;
 
-//프로그램의 전체 흐름을 제어하고 각 패키지들을 연결해 실행하는 메인 클래스
-// 현재는 GUI와 챗봇 적용 전이므로 콘속에서 기능들이 작동하는지 확인하기 위한 테스트 코드로 구성
 public class MainClass {
     public static void main(String[] args) {
-        // 0. 프로그램 시작 시 DB 및 테이블 자동 생성
-    	// SQLiteManager를 호출하여 db 파일과 테이블 구조를 세팅
+        
         SQLiteManager.createDatabaseAndTable();
 
         //[테스트용] 기존 데이터 초기화
@@ -58,12 +55,10 @@ public class MainClass {
             String price = sub[2];	//요금
             String cancelUrl = sub[3]; // 취소 링크 가져오기
 
-            // DateAnalyzer를 활용하여 종료일이 현재 날짜 기준 3~4일 남았는지 판별
             boolean isExpiring = DateAnalyzer.isExpiringSoon(endDate);
             // 만료 임박(true)일 경우 경고. (챗봇 알림 전송 조거문 활용)
             String alertBadge = isExpiring ? " [⚠️ 만료 임박! 알림 대상]" : "";
 
-            // 구독 정보와 만료 상태, 해지 링크를 콘솔에 출력
             System.out.println("- " + serviceName + " | " + price + "원 | 종료일: " + endDate + alertBadge);
             System.out.println("  └ 해지 링크: " + cancelUrl);
         }
@@ -74,6 +69,13 @@ public class MainClass {
         int totalExpenditure = SubscriptionDAO.calculateMonthlyTotal();
         System.out.println("이번 달 구독 지출 총액: " + totalExpenditure + "원");
 
+        // 7. [테스트용] LLM 자연어 파싱 챗봇 입력 시뮬레이션
+        System.out.println("\n========== [LLM 자연어 파싱 테스트] ==========");
+        String testUserInput = "넷플릭스 프리미엄 17000원 담달 5일에 나감";
+        System.out.println("가상 사용자 입력: " + testUserInput);
+        LLMParser.parseAndSave(testUserInput);
+        System.out.println("=============================================\n");
+        
         // 6. 스케줄러
         SubscriptionScheduler scheduler = new SubscriptionScheduler();
         // 스케줄러의 startScheduler 메서드 실행
