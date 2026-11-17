@@ -4,16 +4,18 @@ import scraper.SubscriptionScraper;
 import database.SubscriptionDAO;
 import database.SQLiteManager;
 import analysis.DateAnalyzer;
-import scheduler.SubscriptionScheduler; 
-import scheduler.SubscriptionDto; 
+import scheduler.SubscriptionScheduler; // 스케줄러 클래스 추가
+import scheduler.SubscriptionDto;       // 데이터 전송 객체 추가
+import api.LLMParser;
 
-import java.time.LocalDate;   
-import java.util.ArrayList;   
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
+//프로그램의 전체 흐름을 제어하고 각 패키지들을 연결해 실행하는 메인 클래스
+// 현재는 GUI와 챗봇 적용 전이므로 콘속에서 기능들이 작동하는지 확인하기 위한 테스트 코드로 구성
 public class MainClass {
     public static void main(String[] args) {
-        
         SQLiteManager.createDatabaseAndTable();
 
         //[테스트용] 기존 데이터 초기화
@@ -55,10 +57,12 @@ public class MainClass {
             String price = sub[2];	//요금
             String cancelUrl = sub[3]; // 취소 링크 가져오기
 
+            // DateAnalyzer를 활용하여 종료일이 현재 날짜 기준 3~4일 남았는지 판별
             boolean isExpiring = DateAnalyzer.isExpiringSoon(endDate);
             // 만료 임박(true)일 경우 경고. (챗봇 알림 전송 조거문 활용)
             String alertBadge = isExpiring ? " [⚠️ 만료 임박! 알림 대상]" : "";
 
+            // 구독 정보와 만료 상태, 해지 링크를 콘솔에 출력
             System.out.println("- " + serviceName + " | " + price + "원 | 종료일: " + endDate + alertBadge);
             System.out.println("  └ 해지 링크: " + cancelUrl);
         }
@@ -68,7 +72,7 @@ public class MainClass {
         // ExpenseCalculator(또는 DAO)를 통해 계산된 총액은 추후 Swing 대시보드 하단이나 챗봇 요약 메시지로 전달될 예정
         int totalExpenditure = SubscriptionDAO.calculateMonthlyTotal();
         System.out.println("이번 달 구독 지출 총액: " + totalExpenditure + "원");
-
+        
         // 7. [테스트용] LLM 자연어 파싱 챗봇 입력 시뮬레이션
         System.out.println("\n========== [LLM 자연어 파싱 테스트] ==========");
         String testUserInput = "넷플릭스 프리미엄 17000원 담달 5일에 나감";
@@ -76,9 +80,10 @@ public class MainClass {
         LLMParser.parseAndSave(testUserInput);
         System.out.println("=============================================\n");
         
+        /*
         // 6. 스케줄러
         SubscriptionScheduler scheduler = new SubscriptionScheduler();
-        // 스케줄러의 startScheduler 메서드 실행
+     // 스케줄러의 startScheduler 메서드 실행
         scheduler.startScheduler(
             // 1. 첫 번째 파라미터 (DB 데이터를 가져와 DTO로 변환하여 스케줄러에 전달)
             () -> {
@@ -96,9 +101,10 @@ public class MainClass {
             
             // 2. 두 번째 파라미터 (스케줄러가 알림 대상을 찾았을 때 실행할 행동)
             (dto) -> {
-                System.out.println("\n[챗봇 전송 대기] 디스코드 봇을 통해 '" + dto.getServiceName() + "' 만료 알림을 전송해야 합니다!");
-                // (나중에 디스코드 봇 챗봇 클래스가 통합되면, 이 자리에 봇 전송 코드를 넣습니다.)
+                System.out.println("\n [챗봇 전송 대기] 디스코드 봇을 통해 '" + dto.getServiceName() + "' 만료 알림을 전송해야 합니다!");
+                // (나중에 디스코드 봇 챗봇 클래스가 통합되면, 이 자리에 봇 전송 코드 작성)
             }
         );
+        */
     }
 }
