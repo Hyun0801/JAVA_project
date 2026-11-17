@@ -7,19 +7,19 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
-import java.io.FileInputStream;
-import java.util.Properties;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+
+import io.github.cdimascio.dotenv.Dotenv;
 
 public class LLMParser {
 	
-
 	private static String getApiKey() {
-		Properties prop = new Properties();
-		try (FileInputStream fis = new FileInputStream("config.properties")) {
-			prop.load(fis);
-			return prop.getProperty("API_KEY");
+		try {
+			Dotenv dotenv = Dotenv.load();
+			return dotenv.get("API_KEY");
 		} catch (Exception e) {
-			System.out.println("보안 키(config.properties) 파일을 찾을 수 없습니다.");
+			System.out.println("보안 키(.env) 파일을 찾을 수 없습니다.");
 			return "";
 		}
 	}
@@ -75,7 +75,36 @@ public class LLMParser {
             System.out.println("서버 응답 코드: " + responseCode);
             System.out.println("서버 상세 응답: " + response.toString());
         
-            // 여기에 JSON 결과를 분해해서 SubscriptionDAO.insertSubscription 에 넣는 코드 추가 예정
+            if (responseCode >= 200 && responseCode < 300) {
+                try {
+                    // Gson을 사용하여 서버 응답(문자열)을 JSON 객체로 변환
+                    JsonObject jsonObject = JsonParser.parseString(response.toString()).getAsJsonObject();
+                    
+                    String extractedService = jsonObject.get("service").getAsString();
+                    int extractedPrice = jsonObject.get("price").getAsInt();
+                    String extractedDate = jsonObject.get("date").getAsString();
+                    
+                    System.out.println("\n파싱 성공! DB 저장을 시도합니다.");
+                    System.out.println("- 서비스명: " + extractedService);
+                    System.out.println("- 결제요금: " + extractedPrice + "원");
+                    System.out.println("- 결제일자: " + extractedDate);
+                    
+                    // 임시 해지 링크 생성
+                    String searchUrl = "https://www.google.com/search?q=" + extractedService + "+해지";
+                    
+                    // 추출한 데이터를 DB에 밀어넣기
+                    database.SubscriptionDAO.insertSubscription(extractedService, extractedPrice, extractedDate, searchUrl);
+                    System.out.println("DB 저장 완료!");
+                    
+                } catch (Exception parseEx) {
+                    System.out.println("JSON 데이터를 분해하는 중 오류가 발생했습니다.");
+                    parseEx.printStackTrace();
+                }
+            } else {
+                System.out.println("통신 에러로 인해 DB 저장을 생략합니다. (API 키 대기 중)");
+            }
+            // ==============================================================
+
 		} catch (Exception e) {
 			System.out.println("API 통신 중 오류 발생");
 			e.printStackTrace();
